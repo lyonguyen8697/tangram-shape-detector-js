@@ -42,7 +42,7 @@ function initDetector() {
 
     function findColorRegion(image, region, colorRange) {
         var reverseRange = colorRange[0].map((v, i) => v > colorRange[1][i]);
-        if (reverseRange.every(v => v)) {
+        if (reverseRange.some(v => v)) {
             var lower = colorRange[0].map((v, i) => reverseRange[i] ? 0 : v);
             var lowerMat = new cv.Mat(image.rows, image.cols, image.type(), lower);
             var upperMat = new cv.Mat(image.rows, image.cols, image.type(), colorRange[1]);
@@ -56,7 +56,7 @@ function initDetector() {
             var upperMat = new cv.Mat(image.rows, image.cols, image.type(), upper);
             var region2 = new cv.Mat();
             cv.inRange(image, lowerMat, upperMat, region2);
-            cv.bitwise_and(region1, region2, region);
+            cv.bitwise_or(region1, region2, region);
             lowerMat.delete();
             upperMat.delete();
             region1.delete();
@@ -85,11 +85,11 @@ function initDetector() {
             var approx = new cv.Mat();
             var cnt = contours.get(i);
             cv.approxPolyDP(cnt, approx, approxEpsilon * cv.arcLength(cnt, true), true);
-            // if (approx.rows === numAngle && cv.contourArea(approx) > 500.0) {
-            //     poly.push_back(approx);
-                // detectedShapes.push(approx);
-            // }
-            poly.push_back(approx);
+            if (approx.rows === numAngle && cv.contourArea(approx) > 1000.0) {
+                poly.push_back(approx);
+                detectedShapes.push(approx);
+            }
+            // poly.push_back(approx);
             approx.delete();
             cnt.delete();
         }
