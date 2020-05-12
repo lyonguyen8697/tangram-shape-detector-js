@@ -93,7 +93,7 @@ function main() {
 
 function onOpenCvReady() {
     cv['onRuntimeInitialized'] = function () {
-        console.log('ready');
+        document.querySelector('#status').textContent = 'Camera';
         initDetector();
         main();
     };
