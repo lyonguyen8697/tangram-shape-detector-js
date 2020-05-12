@@ -13,61 +13,88 @@ limitations under the License.
 
 'use strict';
 
-var videoElement = document.querySelector('video');
-var audioSelect = document.querySelector('select#audioSource');
-var videoSelect = document.querySelector('select#videoSource');
+function main() {
+    var videoElement = document.querySelector('video');
+    var videoSelect = document.querySelector('select#videoSource');
+    var canvasElement = document.querySelector('canvas');
+    var context = canvasElement.getContext('2d');
 
-audioSelect.onchange = getStream;
-videoSelect.onchange = getStream;
+    videoSelect.onchange = getStream;
 
-getStream().then(getDevices).then(gotDevices);
+    getStream().then(getDevices).then(gotDevices);
 
-function getDevices() {
-    // AFAICT in Safari this only gets default devices until gUM is called :/
-    return navigator.mediaDevices.enumerateDevices();
-}
+    videoElement.addEventListener('loadedmetadata', initCanvas, false);
+    videoElement.addEventListener('play', drawFrame, false);
 
-function gotDevices(deviceInfos) {
-    window.deviceInfos = deviceInfos; // make available to console
-    console.log('Available input and output devices:', deviceInfos);
-    for (const deviceInfo of deviceInfos) {
-        const option = document.createElement('option');
-        option.value = deviceInfo.deviceId;
-        if (deviceInfo.kind === 'audioinput') {
-            option.text = deviceInfo.label || `Microphone ${audioSelect.length + 1}`;
-            audioSelect.appendChild(option);
-        } else if (deviceInfo.kind === 'videoinput') {
-            option.text = deviceInfo.label || `Camera ${videoSelect.length + 1}`;
-            videoSelect.appendChild(option);
+    function getDevices() {
+        // AFAICT in Safari this only gets default devices until gUM is called :/
+        return navigator.mediaDevices.enumerateDevices();
+    }
+
+    function gotDevices(deviceInfos) {
+        window.deviceInfos = deviceInfos; // make available to console
+        console.log('Available input and output devices:', deviceInfos);
+        for (const deviceInfo of deviceInfos) {
+            const option = document.createElement('option');
+            option.value = deviceInfo.deviceId;
+            if (deviceInfo.kind === 'videoinput') {
+                option.text = deviceInfo.label || `Camera ${videoSelect.length + 1}`;
+                videoSelect.appendChild(option);
+            }
         }
     }
-}
 
-function getStream() {
-    if (window.stream) {
-        window.stream.getTracks().forEach(track => {
-            track.stop();
-        });
+    function getStream() {
+        if (window.stream) {
+            window.stream.getTracks().forEach(track => {
+                track.stop();
+            });
+        }
+        const videoSource = videoSelect.value;
+        const constraints = {
+            video: {deviceId: videoSource ? {exact: videoSource} : undefined}
+        };
+        return navigator.mediaDevices.getUserMedia(constraints).then(gotStream).catch(handleError);
     }
-    const audioSource = audioSelect.value;
-    const videoSource = videoSelect.value;
-    const constraints = {
-        audio: {deviceId: audioSource ? {exact: audioSource} : undefined},
-        video: {deviceId: videoSource ? {exact: videoSource} : undefined}
+
+    function gotStream(stream) {
+        window.stream = stream; // make stream available to console
+        videoSelect.selectedIndex = [...videoSelect.options].findIndex(option => option.text === stream.getVideoTracks()[0].label);
+        videoElement.srcObject = stream;
+    }
+
+    function handleError(error) {
+        console.error('Error: ', error);
+    }
+
+    function initCanvas(e) {
+        canvasElement.width = this.videoWidth;
+        canvasElement.height = this.videoHeight;
+        this.width = this.videoWidth;
+        this.height = this.videoHeight;
+        window.cvImage = new cv.Mat(this.videoHeight, this.videoWidth, cv.CV_8UC4);
+        window.videoCapture = new cv.VideoCapture(this);
+    }
+
+    function drawFrame(e) {
+        var $this = this;
+        (function loop() {
+            if (!$this.paused && !$this.ended) {
+                videoCapture.read(cvImage);
+                var shapes = detector.findAllShapes(cvImage);
+                cv.imshow(canvasElement, cvImage);
+                // context.drawImage($this, 0, 0, canvasElement.width, canvasElement.height);
+                // console.log(cv.imread(canvasElement));
+                setTimeout(loop, 1000 / 30);
+            }
+        })();
+    }
+}
+
+function onOpenCvReady() {
+    cv['onRuntimeInitialized'] = function () {
+        console.log('ready');
+        initDetector();
+        main();
     };
-    return navigator.mediaDevices.getUserMedia(constraints).
-    then(gotStream).catch(handleError);
-}
-
-function gotStream(stream) {
-    window.stream = stream; // make stream available to console
-    audioSelect.selectedIndex = [...audioSelect.options].
-    findIndex(option => option.text === stream.getAudioTracks()[0].label);
-    videoSelect.selectedIndex = [...videoSelect.options].
-    findIndex(option => option.text === stream.getVideoTracks()[0].label);
-    videoElement.srcObject = stream;
-}
-
-function handleError(error) {
-    console.error('Error: ', error);
 }

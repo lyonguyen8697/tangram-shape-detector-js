@@ -16,17 +16,17 @@ limitations under the License.
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="description" content="Simplest possible examples of HTML, CSS and JavaScript.">
-    <meta name="author" content="//samdutton.com">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta itemprop="name" content="simpl.info: simplest possible examples of HTML, CSS and JavaScript">
-    <meta itemprop="image" content="/images/icons/icon192.png">
     <meta id="theme-color" name="theme-color" content="#fff">
 
     <base target="_blank">
 
 
-    <title>mediaDevices.enumerateDevices()</title>
+    <title>Tangram Shape Detector Demo</title>
+
+    <script async src="js/detector.js"></script>
+    <script async src="js/main.js"></script>
+    <script async src="js/opencv.js" onload="onOpenCvReady();"></script>
 
     <link rel="stylesheet" href="css/main.css">
 
@@ -48,11 +48,7 @@ limitations under the License.
 
 <div id="container">
 
-    <h1><a href="../../index.html" title="simpl.info home page">simpl.info</a> mediaDevices.<wbr>enumerateDevices()</h1>
-
-    <div class="select">
-        <label for="audioSource">Audio source: </label><select id="audioSource"></select>
-    </div>
+    <h1>Tangram Shape Detector Demo</h1>
 
     <div class="select">
         <label for="videoSource">Video source: </label><select id="videoSource"></select>
@@ -60,11 +56,9 @@ limitations under the License.
 
     <video autoplay muted playsinline></video>
 
-    <script async src="js/main.js"></script>
+    <canvas></canvas>
 
-    <p>For more information see <a href="https://www.html5rocks.com/en/tutorials/getusermedia/intro/" title="Media capture article by Eric Bidelman on HTML5 Rocks">Capturing Audio &amp; Video in HTML5</a> on HTML5 Rocks.</p>
-
-    <a href="https://github.com/samdutton/simpl/blob/gh-pages/getusermedia/sources/js/main.js" title="View source for this page on GitHub" id="viewSource">View source on GitHub</a>
+    <a href="https://github.com/lyonguyen8697/tangram-shape-detector-js" title="View source for this page on GitHub" id="viewSource">View source on GitHub</a>
 
 </div>
 
