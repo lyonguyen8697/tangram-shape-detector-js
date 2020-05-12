@@ -70,7 +70,25 @@ function initDetector() {
         upperMat.delete();
     }
 
-    function findShapes(image, colorRange, numAngle, approxEpsilon = 0.05) {
+    function drawContours(image, contours, color=[0, 0, 0, 0], thickness=3) {
+        var color = new cv.Scalar(...color);
+        cv.drawContours(image, contours, -1, color, thickness, cv.LINE_8);
+    }
+
+    function drawLabels(image, contours, label, fontSize=1, color=[0, 0, 0, 255]) {
+        var color = new cv.Scalar(...color);
+        for (var i = 0; i < contours.size(); i++) {
+            var cnt = contours.get(i)
+            var moments = cv.moments(cnt);
+            var x = moments.m10 / moments.m00;
+            var y = moments.m01 / moments.m00;
+            var center = new cv.Point(x, y);
+            cv.putText(image, label, center, cv.FONT_HERSHEY_COMPLEX, fontSize, color);
+            cnt.delete();
+        }
+    }
+
+    function findAndDrawShapes(image, colorRange, numAngle, label, approxEpsilon = 0.05) {
         var detectedShapes = [];
         var hsvImage = new cv.Mat();
         var region = new cv.Mat();
@@ -89,12 +107,11 @@ function initDetector() {
                 poly.push_back(approx);
                 detectedShapes.push(approx);
             }
-            // poly.push_back(approx);
             approx.delete();
             cnt.delete();
         }
-        var color = new cv.Scalar(0, 0, 0, 0);
-        cv.drawContours(image, poly, -1, color, 3, cv.LINE_8);
+        drawContours(image, poly);
+        drawLabels(image, poly, label);
         hsvImage.delete();
         region.delete();
         contours.delete();
@@ -102,16 +119,16 @@ function initDetector() {
         return detectedShapes;
     }
 
-    function findAllShapes(image) {
+    function findAndDrawAllShapes(image) {
         var shapes = [];
         for (var attr of shapeAttributes) {
-            var s = findShapes(image, attr.colorRange, attr.numAngle);
+            var s = findAndDrawShapes(image, attr.colorRange, attr.numAngle, attr.color);
             shapes.concat(s);
         }
         return shapes;
     }
 
     var detector = {};
-    detector.findAllShapes = findAllShapes;
+    detector.findAllShapes = findAndDrawAllShapes;
     window.detector = detector;
 }
